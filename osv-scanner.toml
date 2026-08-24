@@ -109,13 +109,3 @@ ignoreUntil = 2027-02-18
 id = "RUSTSEC-2024-0436"  # paste
 reason = "Unmaintained proc-macro reached only via thirtyfour, a dev-dependency of srelens-desktop. Compile-time only and never linked into a shipped binary."
 ignoreUntil = 2027-02-18
-
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0235"  # rkyv
-reason = "rkyv 0.7 archive validation. Reached via tauri-plugin-log -> byte-unit, whose optional `rkyv` feature we do not enable, so the code is never compiled. byte-unit pins 0.7; the fix is 0.8."
-ignoreUntil = 2027-02-18
-
-[[IgnoredVulns]]
-id = "RUSTSEC-2023-0071"  # rsa -- Marvin timing sidechannel
-reason = "No fixed version of the rsa crate exists. Reached via openidconnect for OIDC token verification; srelens performs public-key signature verification, not RSA private-key decryption, so the key-recovery oracle does not apply."
-ignoreUntil = 2027-02-18

@@ -38,7 +38,9 @@ log = "0.4"
 # the GUI resolve to the same config dir and share one token file.
 dirs = "6"
 tauri = { version = "2.11.3", features = [] }
-tauri-plugin-log = "2"
+# 2.9.0 removes the unused byte-unit dependency that kept vulnerable rkyv
+# 0.7.46 in Cargo.lock even though SRELens never enabled its archive feature.
+tauri-plugin-log = "=2.9.0"
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 srelens-agent = { path = "../../../crates/agent" }
@@ -101,7 +103,9 @@ tauri-plugin-window-state = "2"
 # GUI-launched apps on macOS/Linux get launchd's minimal PATH, so kubeconfig
 # exec plugins (kubectl, krew plugins, cloud CLIs) can't be found. This
 # resolves the user's login-shell PATH at startup. No-op on Windows.
-fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
+# Git dependencies must be reproducible from the manifest, not just Cargo.lock.
+# This is the current upstream dev head, verified 2026-08-24 (Apache-2.0 OR MIT).
+fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs", rev = "c4c45d503ea115a839aae718d02f79e7c7f0f673" }
 
 [dev-dependencies]
 # The "test" feature unlocks tauri::test::mock_app — the unit suites drive
