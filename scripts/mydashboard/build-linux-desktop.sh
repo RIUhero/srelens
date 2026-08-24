@@ -21,7 +21,7 @@ pnpm rebuild esbuild
 pnpm typecheck
 pnpm build
 cargo build --locked -p srelens-desktop --features custom-protocol --release
-pnpm --filter @srelens/desktop tauri build -- --bundles deb
+pnpm --filter @srelens/desktop tauri build --bundles deb
 
 actual_head=$(git rev-parse HEAD)
 actual_tree=$(git rev-parse 'HEAD^{tree}')
