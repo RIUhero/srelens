@@ -3,7 +3,8 @@ set -euo pipefail
 
 expected_head=${MYDASHBOARD_EXPECTED_HEAD:?set MYDASHBOARD_EXPECTED_HEAD to the exact candidate SHA}
 receipt_dir=${MYDASHBOARD_RECEIPT_DIR:?set MYDASHBOARD_RECEIPT_DIR to a bounded output directory}
-repo_root=$(git rev-parse --show-toplevel)
+script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+repo_root=$(git -C "$script_dir" rev-parse --show-toplevel)
 image=ubuntu@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517
 
 actual_head=$(git -C "$repo_root" rev-parse HEAD)

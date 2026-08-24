@@ -1,3 +1,5 @@
+ 1번: printf: --: 부적절한 옵션
+printf: 사용법: printf [-v <변수>] <출력형식> [<인자>]
 // @vitest-environment node
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -52,6 +54,7 @@ describe("MyDashboard desktop acceptance contract", () => {
     expect(buildScript).toContain("cargo build --locked");
     expect(buildScript).toContain("artifactSha256");
     expect(containerScript).toContain("ubuntu@sha256:");
+    expect(containerScript).toContain('${BASH_SOURCE[0]}');
     expect(containerScript).toContain("sha256sum --check --strict");
     expect(containerScript).toContain("--default-toolchain 1.98.0");
     expect(containerScript).toContain("pnpm@9.15.9");
