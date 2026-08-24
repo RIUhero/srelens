@@ -49,3 +49,31 @@ existing Kubernetes login. It is therefore not performed blindly in this
 minimal seam. `supplyChainVerified=false` remains authoritative until an
 upstream fixed release or a separately reviewed compatible replacement removes
 the vulnerable crate from the exact lockfile.
+
+## Acceptance-gate audit
+
+The follow-up audit at Workstation v1 head
+`a9cc6ccc315df50e1640bc6608a16a4cab157456` confirmed all of the following:
+
+- `cargo tree --locked -i rsa` reports exactly `rsa 0.9.10 →
+  openidconnect 4.0.1 → srelens-server → srelens-desktop`;
+- `cargo tree --locked -e features -i openidconnect` shows only the requested
+  HTTP transport features (`reqwest` and `rustls-tls`); RSA is not controlled
+  by an `openidconnect` feature;
+- the latest published `openidconnect` release is 4.0.1 and its normalized
+  manifest declares `rsa = "0.9.2"` unconditionally;
+- RustSec and RustCrypto both report that RUSTSEC-2023-0071 has no patched
+  release; the upstream RSA constant-time/padding work remains open;
+- SRELens uses `CoreProviderMetadata`, `CoreClient`, discovery, authorization
+  code plus PKCE, nonce-bound ID-token verification, and refresh grants in
+  both app authentication and managed Kubernetes cluster authentication.
+
+The official fixed-upgrade and official feature-removal options therefore do
+not exist. Removing OIDC or isolating it out of the default server/desktop
+would change upstream authentication behavior. Replacing the verifier or
+vendoring a locally modified cryptographic crate would be a new security-
+critical implementation, not a bounded dependency update. None of those
+choices is accepted by this slice.
+
+No Cargo manifest or lockfile change is made for RSA. The advisory remains a
+hard CI failure and `supplyChainVerified=false` remains fail closed.

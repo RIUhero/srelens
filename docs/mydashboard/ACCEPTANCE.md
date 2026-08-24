@@ -7,7 +7,10 @@ These states are independent and must not be collapsed into “done”:
 | `sourceVerified` | verified at the starting baseline | exact fork/upstream head, tree, and 0/0 divergence |
 | `supplyChainVerified` | **false** | vulnerability-free exact lockfile without advisory allowlisting |
 | `workstationSeamVerified` | locally testable | default-off behavior, module lifecycle, projection redaction, accessibility |
-| `desktopBuildVerified` | **unverified** | successful Tauri GTK/WebKit desktop build on a provisioned host |
+| `desktopCompileVerified` | **unverified** | locked `srelens-desktop` Rust compile on the accepted host or an explicitly isolated build environment |
+| `desktopPackageVerified` | **unverified** | production Tauri package plus digest bound to exact source HEAD/tree |
+| `desktopRuntimeSmokeVerified` | **false** | clean start/interaction/shutdown in an actual `ai-worker` graphical session |
+| `desktopBuildVerified` | **false** | compile, package, and actual graphical runtime-smoke gates all pass |
 | `runtimeEmpiricalVerified` | **false** | separately approved bounded runtime campaign; fixtures never qualify |
 
 ## Provider-free seam gate
@@ -37,8 +40,8 @@ These states are independent and must not be collapsed into “done”:
 
 ## Unverified boundaries
 
-Frontend build success is not a Tauri desktop build. This host previously
-lacked GTK/WebKit/GLib development packages, so no desktop PASS may be claimed
-without a new successful native build. No live provider, local model, sandbox,
-service installation, release, deployment, restart, or rollback is authorized
-or implied by this slice.
+Frontend build success and `cargo check` are not a Tauri desktop build.
+Container or CI compilation may close compile/package evidence, but cannot
+replace an actual graphical-session smoke on `ai-worker`. No live provider,
+local model, sandbox, service installation, release, deployment, restart, or
+rollback is authorized or implied by this slice.
