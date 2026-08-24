@@ -13,6 +13,9 @@ These states are independent and must not be collapsed into “done”:
 | `desktopBuildVerified` | **true** | compile, package, and actual graphical runtime-smoke gates all pass |
 | `runtimeEmpiricalVerified` | **true for the Phase A desktop-runtime scope** | approved bounded execution of the production packages; the static projection remains non-production and proves no live Core/provider behavior |
 
+Phase A remains accepted. Phase B is evaluated independently and does not
+reinterpret the accepted Phase A physical-runtime receipt.
+
 ## Provider-free seam gate
 
 - feature flag absent or any value other than exact `1`: no module navigation,
@@ -106,11 +109,31 @@ home was hidden behind an empty tmpfs and only the owner-only campaign
 directory was re-exposed. The supervisor exited zero after the redacted runner
 receipt, Xorg shutdown, and VT restoration all completed.
 
+## Phase B provider-free Core gate
+
+The implementation at
+`11976fea25a36e798efc3ddbd742d4852d9a657b` (tree
+`d87e7a086c7f94a13ab2c640a9caac0eb3a6e610`) closes the local Phase B gates:
+
+| Phase B state | Disposition | Evidence |
+|---|---|---|
+| `coreProcessVerified` | **true** | exact desktop executable served the versioned stdio protocol in an empty environment |
+| `coreProjectionVerified` | **true** | live empty projection, exact allowlist, unknown/sensitive fail-closed tests |
+| `workstationCoreTransportVerified` | **true** | existing Tauri command and Registry invoked the real child, acknowledged shutdown, and retained no manager state |
+| `providerDispatch` | **false** | no provider dependency, operation, process, or network transport exists in the Core path |
+| `credentialAccess` | **false** | Core dispatch precedes credential lookup and the child environment is cleared |
+| `canonicalMutation` | **false** | Phase B returns an empty projection and exposes no mutation operation |
+| `phaseCStarted` | **false** | no provider execution plane, orchestration, scheduler, or canonical state was added |
+
+The Phase A static fixture remains available only in the feature-OFF module
+construction path for its existing tests and is still non-production. The
+feature-ON product path has no fixture fallback and uses the live read-only
+Core capability.
+
 ## Unverified boundaries
 
-The Phase A desktop-runtime gate is closed, but the rendered Core projection is
-still a static redacted fixture. It proves the production desktop shell and
-read-only seam, not live Core transport, provider execution, canonical
-mutation, or production usability. No live provider, local model, sandbox,
-service installation, release, deployment, restart, or rollback is authorized
-or implied by this slice.
+Phase B does not claim provider execution, canonical Task/Workspace mutation,
+account/session lifecycle, local-model execution, sandboxing, service
+installation, release, deployment, restart, or rollback. Those remain outside
+the accepted Phase A and current Phase B scope. Phase C has not started, and
+`wholeProductComplete` remains false.
