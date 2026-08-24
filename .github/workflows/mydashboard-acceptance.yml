@@ -148,4 +148,6 @@ jobs:
         run: |
           sudo MYDASHBOARD_TEST_RUN_USER="$USER" \
             scripts/mydashboard/test-phase-b-xauthority-root.sh
-          scripts/mydashboard/test-phase-b-bwrap-contract.sh
+          # Ubuntu 24 hosted runners restrict unprivileged user namespaces;
+          # root still exercises the same 18 mount and network boundaries.
+          sudo scripts/mydashboard/test-phase-b-bwrap-contract.sh

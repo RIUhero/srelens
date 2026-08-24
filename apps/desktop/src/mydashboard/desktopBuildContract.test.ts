@@ -78,6 +78,7 @@ describe("MyDashboard desktop acceptance contract", () => {
   it("runs the real root xauth and Bubblewrap contracts without product dispatch", () => {
     expect(workflow).toContain("scripts/mydashboard/test-phase-b-xauthority-root.sh");
     expect(workflow).toContain("scripts/mydashboard/test-phase-b-bwrap-contract.sh");
+    expect(workflow).toContain("sudo scripts/mydashboard/test-phase-b-bwrap-contract.sh");
     expect(workflow).toContain('MYDASHBOARD_TEST_RUN_USER="$USER"');
   });
 });
