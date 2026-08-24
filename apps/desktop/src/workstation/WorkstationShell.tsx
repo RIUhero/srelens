@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { enabledWorkstationModules, type WorkstationModule } from "./WorkstationModule";
 
 const BASE_MODULE_ID = "srelens";
+export const WORKSTATION_NAV_HEIGHT_PX = 40;
 
 export function WorkstationShell({
   baseView,
@@ -28,7 +29,8 @@ export function WorkstationShell({
     <div className="flex h-screen flex-col overflow-hidden bg-background text-foreground">
       <nav
         aria-label="Workstation modules"
-        className="flex h-10 shrink-0 items-center gap-1 border-b border-border bg-card px-3"
+        className="flex shrink-0 items-center gap-1 border-b border-border bg-card px-3"
+        style={{ height: WORKSTATION_NAV_HEIGHT_PX }}
       >
         <button
           type="button"

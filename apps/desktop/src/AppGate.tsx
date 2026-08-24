@@ -5,7 +5,7 @@ import { fetchMe, type Me } from "@srelens/core";
 import { isWeb } from "@srelens/core/platform";
 import { LoadingState } from "./ui";
 import { createMyDashboardModule, myDashboardFeatureEnabled } from "./mydashboard/module";
-import { WorkstationShell } from "./workstation/WorkstationShell";
+import { WORKSTATION_NAV_HEIGHT_PX, WorkstationShell } from "./workstation/WorkstationShell";
 
 type Auth = { status: "pending" } | { status: "authed"; me: Me | null } | { status: "anon" };
 
@@ -40,5 +40,10 @@ export default function AppGate() {
   if (auth.status === "anon") return <LoginScreen />;
   if (!myDashboardFeatureEnabled()) return <App />;
   const myDashboard = createMyDashboardModule(true);
-  return <WorkstationShell baseView={<App />} modules={[myDashboard]} />;
+  return (
+    <WorkstationShell
+      baseView={<App vaultGateTopInsetPx={WORKSTATION_NAV_HEIGHT_PX} />}
+      modules={[myDashboard]}
+    />
+  );
 }

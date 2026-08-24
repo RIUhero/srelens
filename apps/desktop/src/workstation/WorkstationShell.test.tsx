@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { WorkstationModule } from "./WorkstationModule";
-import { WorkstationShell } from "./WorkstationShell";
+import { WORKSTATION_NAV_HEIGHT_PX, WorkstationShell } from "./WorkstationShell";
 
 function module(featureFlag: boolean, onActivate = vi.fn(), onDeactivate = vi.fn()): WorkstationModule {
   return {
@@ -28,6 +28,9 @@ describe("WorkstationShell", () => {
     const onActivate = vi.fn();
     const onDeactivate = vi.fn();
     render(<WorkstationShell baseView={<p>Base view</p>} modules={[module(true, onActivate, onDeactivate)]} />);
+    expect(screen.getByRole("navigation", { name: "Workstation modules" }).style.height).toBe(
+      `${WORKSTATION_NAV_HEIGHT_PX}px`,
+    );
     fireEvent.click(screen.getByRole("button", { name: "Open test module" }));
     expect(screen.getByText("Module view")).toBeTruthy();
     expect(onActivate).toHaveBeenCalledTimes(1);

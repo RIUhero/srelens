@@ -32,6 +32,16 @@ const status = (over: Partial<Parameters<typeof mcpSecurity.vaultStatus>[0]> & R
 });
 
 describe("VaultGate", () => {
+  it("can leave only the workstation navigation strip outside the blocking overlay", async () => {
+    mcpSecurity.vaultStatus.mockResolvedValue(status({ mode: "setup-required", keySource: "keychain" }));
+    render(<VaultGate topInsetPx={40} />);
+
+    const heading = await screen.findByRole("heading", { name: /protect your secrets/i });
+    const overlay = heading.closest(".fixed.inset-0") as HTMLElement | null;
+    expect(overlay?.style.top).toBe("40px");
+    expect(screen.getByRole("button", { name: /create password/i })).toBeTruthy();
+  });
+
   it("stays closed with a retry when the status command itself fails", async () => {
     mcpSecurity.vaultStatus.mockRejectedValue(new Error("vault state unavailable"));
     render(<VaultGate onReady={() => { throw new Error("onReady must not fire on failure"); }} />);
