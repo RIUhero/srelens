@@ -122,3 +122,21 @@ Therefore `desktopCompileVerified=true`, `desktopPackageVerified=true`,
 `desktopRuntimeSmokeVerified=true`, and `desktopBuildVerified=true` for this
 Phase A candidate. The static Core projection remains visibly non-production;
 no live provider or Core behavior is inferred from it.
+
+## Phase B harness incidents
+
+Phase B has not reused the Phase A runtime receipt. Two exact-candidate
+campaigns exited before any product process started. The first exposed a
+Bubblewrap ordering defect (`/campaign` missing below a root already remounted
+read-only). The second exposed an Xauthority writer-identity defect: the file
+was pre-created for `karasani`, but root-run `xauth` performed an atomic replace
+and changed only the owner to root; regular-file, mode `0600`, and one-link
+checks remained valid. Both harnesses and sudo commands are withdrawn.
+
+The replacement mount graph uses a writable sandbox-local `/campaign`, mounts
+the immutable campaign source below `/campaign/source`, leaves only bounded
+`/results` host-writable, hides host HOME, and unshares the network. The
+replacement Xauthority flow writes as `karasani`, validates a readable display
+entry without rendering it, and removes only captured campaign-local file
+identities on success or failure. Physical Phase B runtime remains unverified
+until a new exact candidate passes the full campaign.

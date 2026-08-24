@@ -133,3 +133,19 @@ jobs:
           apps/desktop/src/mydashboard/desktopBuildContract.test.ts
           apps/desktop/src/mydashboard/supplyChainContract.test.ts
           apps/desktop/src/security-config.test.ts
+
+  xauthority-provider-free:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install provider-free harness prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bubblewrap xauth
+      - name: Execute root and mount-boundary regressions
+        run: |
+          sudo MYDASHBOARD_TEST_RUN_USER="$USER" \
+            scripts/mydashboard/test-phase-b-xauthority-root.sh
+          scripts/mydashboard/test-phase-b-bwrap-contract.sh

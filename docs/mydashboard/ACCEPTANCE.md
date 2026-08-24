@@ -135,6 +135,25 @@ themselves close strict Phase B acceptance. The current Phase B state is:
 | `phaseBRuntimeEmpiricalVerified` | **false** |
 | `phaseBVerified` | **false** |
 
+Two pre-runtime harness attempts are retained only as historical diagnostic
+evidence. Candidate `f2a4cff037c9a73ccd7e070c5e645481072f2872` stopped
+before application launch because a read-only root preceded creation of the
+`/campaign` mountpoint. Its corrected descendant
+`35518c6606b5e2d2d3a95e98b9480241a3c2c629` also stopped before Xorg because
+root-run `xauth` atomically replaced the pre-created authority file with a
+root-owned file. Neither attempt contributes feature-OFF, feature-ON, Core, or
+physical-runtime acceptance. With the source correction and provider-free
+regressions in place, the state returns to
+`phaseBState=awaiting-physical-runtime-smoke`, with
+`phaseBRuntimeEmpiricalVerified=false` and `phaseBVerified=false`.
+
+The corrected authority boundary pre-creates the file for the final owner,
+runs the real `xauth` writer as that owner under an empty, minimal environment,
+checks owner/mode/link/type and display-entry readability, immediately drops
+the cookie variable, and records only six safe booleans. Failure cleanup is
+limited to exact campaign-local authority/lock/temp identities captured by
+inode without rendering the inode, cookie, path, UID, or raw command output.
+
 Strict acceptance additionally requires an actual `ai-worker` physical-Xorg
 campaign for the exact current candidate: feature-OFF absence, feature-ON live
 Core rendering, fail-closed unavailable/malformed behavior, restart recovery,

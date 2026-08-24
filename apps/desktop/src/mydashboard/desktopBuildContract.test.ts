@@ -28,6 +28,7 @@ describe("MyDashboard desktop acceptance contract", () => {
     "desktop-linux-build",
     "cargo-audit",
     "projection-security-tests",
+    "xauthority-provider-free",
   ])("keeps the %s CI gate", (job) => {
     expect(workflow).toContain(`  ${job}:`);
   });
@@ -72,5 +73,11 @@ describe("MyDashboard desktop acceptance contract", () => {
     expect(buildScript).toContain("unset TAURI_SIGNING_PRIVATE_KEY");
     expect(buildScript).not.toMatch(/^\s*(codex|claude|opencode|qwen)(?:\s|$)/im);
     expect(workflow).not.toMatch(/provider[_ -]dispatch|provider[_ -]login/i);
+  });
+
+  it("runs the real root xauth and Bubblewrap contracts without product dispatch", () => {
+    expect(workflow).toContain("scripts/mydashboard/test-phase-b-xauthority-root.sh");
+    expect(workflow).toContain("scripts/mydashboard/test-phase-b-bwrap-contract.sh");
+    expect(workflow).toContain('MYDASHBOARD_TEST_RUN_USER="$USER"');
   });
 });

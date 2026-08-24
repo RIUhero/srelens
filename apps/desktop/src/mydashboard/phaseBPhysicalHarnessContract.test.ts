@@ -7,6 +7,7 @@ const root = join(__dirname, "../../../..");
 const sandbox = readFileSync(join(root, "scripts/mydashboard/run-phase-b-bwrap.sh"), "utf8");
 const contract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-bwrap-contract.sh"), "utf8");
 const harness = readFileSync(join(root, "scripts/mydashboard/phase-b-physical-root-harness.sh"), "utf8");
+const xauthorityRootContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-xauthority-root.sh"), "utf8");
 
 describe("Phase B physical Bubblewrap incident regression", () => {
   it("constructs mountpoints before sealing a minimal root", () => {
@@ -55,5 +56,12 @@ describe("Phase B physical Bubblewrap incident regression", () => {
     expect(harness).toContain('/usr/bin/chvt "${original_vt:-1}"');
     expect(harness).toContain("xorg-orphan");
     expect(harness).toContain("vt-restore");
+    expect(harness).toContain('/usr/sbin/runuser -u "$run_user" -- env -i');
+    expect(harness).toContain("unset cookie");
+    expect(harness).toContain("xauthorityEntryReadable");
+    expect(harness).toContain("capture_xauthority_cleanup_identity");
+    expect(xauthorityRootContract).toContain("Xauthority-root-writer");
+    expect(xauthorityRootContract).toContain("Xauthority-user-writer");
+    expect(xauthorityRootContract).toContain("xauthority-root-contract=passed");
   });
 });

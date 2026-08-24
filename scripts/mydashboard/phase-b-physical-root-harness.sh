@@ -12,17 +12,70 @@ results="$campaign/results"
 xauthority="$campaign/Xauthority"
 xorg_pid=
 original_vt=
+xauthority_cleanup_paths=()
+xauthority_cleanup_inodes=()
 
 safe_fail() {
   printf 'phase-b-physical-runtime=failed safe-stage=%s\n' "$1" >&2
   exit 1
 }
 
+capture_xauthority_cleanup_identity() {
+  local candidate inode
+  xauthority_cleanup_paths=()
+  xauthority_cleanup_inodes=()
+  for candidate in "$xauthority" "$xauthority-c" "$xauthority-l" "$xauthority-n"; do
+    [[ -e "$candidate" ]] || continue
+    [[ -f "$candidate" && ! -L "$candidate" && $(stat -c %h "$candidate") == 1 ]] || continue
+    inode=$(stat -c %i "$candidate")
+    xauthority_cleanup_paths+=("$candidate")
+    xauthority_cleanup_inodes+=("$inode")
+  done
+}
+
 safe_remove_xauthority() {
-  [[ -e "$xauthority" ]] || return 0
-  if [[ -f "$xauthority" && ! -L "$xauthority" && $(stat -c %h "$xauthority") == 1 && $(stat -c %U "$xauthority") == "$run_user" && $(stat -c %a "$xauthority") == 600 ]]; then
-    rm -f -- "$xauthority"
+  local index candidate inode owner
+  for index in "${!xauthority_cleanup_paths[@]}"; do
+    candidate=${xauthority_cleanup_paths[$index]}
+    inode=${xauthority_cleanup_inodes[$index]}
+    [[ -e "$candidate" && -f "$candidate" && ! -L "$candidate" ]] || continue
+    [[ $(stat -c %h "$candidate") == 1 && $(stat -c %i "$candidate") == "$inode" ]] || continue
+    owner=$(stat -c %U "$candidate")
+    [[ "$owner" == "$run_user" || "$owner" == root ]] || continue
+    rm -f -- "$candidate"
+  done
+}
+
+probe_xauthority() {
+  xauthority_exists=false
+  xauthority_regular=false
+  xauthority_owner_valid=false
+  xauthority_mode_valid=false
+  xauthority_link_count_valid=false
+  xauthority_entry_readable=false
+  [[ -e "$xauthority" ]] && xauthority_exists=true
+  [[ -f "$xauthority" && ! -L "$xauthority" ]] && xauthority_regular=true
+  [[ "$xauthority_exists" == true && $(stat -c %U "$xauthority") == "$run_user" ]] && xauthority_owner_valid=true
+  [[ "$xauthority_exists" == true && $(stat -c %a "$xauthority") == 600 ]] && xauthority_mode_valid=true
+  [[ "$xauthority_exists" == true && $(stat -c %h "$xauthority") == 1 ]] && xauthority_link_count_valid=true
+  if [[ "$xauthority_regular" == true && "$xauthority_owner_valid" == true ]]; then
+    if /usr/sbin/runuser -u "$run_user" -- env -i \
+      HOME="$campaign" USER="$run_user" LOGNAME="$run_user" XAUTHORITY="$xauthority" PATH=/usr/bin:/bin \
+      /usr/bin/xauth -f "$xauthority" nlist "$display" 2>/dev/null | grep -q .; then
+      xauthority_entry_readable=true
+    fi
   fi
+}
+
+write_xauthority_safe_receipt() {
+  local receipt_tmp
+  receipt_tmp=$(mktemp "$results/.xauthority.XXXXXX")
+  printf '{"schemaVersion":1,"xauthorityExists":%s,"xauthorityRegular":%s,"xauthorityOwnerValid":%s,"xauthorityModeValid":%s,"xauthorityLinkCountValid":%s,"xauthorityEntryReadable":%s}\n' \
+    "$xauthority_exists" "$xauthority_regular" "$xauthority_owner_valid" \
+    "$xauthority_mode_valid" "$xauthority_link_count_valid" "$xauthority_entry_readable" >"$receipt_tmp"
+  chown "$run_user:$run_user" "$receipt_tmp"
+  chmod 0600 "$receipt_tmp"
+  mv -f -- "$receipt_tmp" "$results/xauthority-preflight.json"
 }
 
 cleanup() {
@@ -49,10 +102,25 @@ done
 pgrep -f "/usr/lib/xorg/Xorg ${display}( |$)" >/dev/null && safe_fail display-busy
 
 original_vt=$(/usr/bin/fgconsole 2>/dev/null || printf 1)
+[[ ! -e "$xauthority" && ! -e "$xauthority-c" && ! -e "$xauthority-l" && ! -e "$xauthority-n" ]] || safe_fail xauthority-preexisting
 install -m 0600 -o "$run_user" -g "$run_user" /dev/null "$xauthority"
+capture_xauthority_cleanup_identity
 cookie=$(/usr/bin/mcookie)
-/usr/bin/xauth -f "$xauthority" add "$display" MIT-MAGIC-COOKIE-1 "$cookie" >/dev/null 2>&1 || safe_fail xauthority-create
-[[ -f "$xauthority" && ! -L "$xauthority" && $(stat -c %h "$xauthority") == 1 && $(stat -c %U "$xauthority") == "$run_user" && $(stat -c %a "$xauthority") == 600 ]] || safe_fail xauthority-metadata
+if ! printf 'add %s MIT-MAGIC-COOKIE-1 %s\n' "$display" "$cookie" | \
+  /usr/sbin/runuser -u "$run_user" -- env -i \
+    HOME="$campaign" USER="$run_user" LOGNAME="$run_user" XAUTHORITY="$xauthority" PATH=/usr/bin:/bin \
+    /usr/bin/xauth -f "$xauthority" source - >/dev/null 2>&1; then
+  unset cookie
+  capture_xauthority_cleanup_identity
+  probe_xauthority
+  write_xauthority_safe_receipt
+  safe_fail xauthority-create
+fi
+unset cookie
+capture_xauthority_cleanup_identity
+probe_xauthority
+write_xauthority_safe_receipt
+[[ "$xauthority_exists" == true && "$xauthority_regular" == true && "$xauthority_owner_valid" == true && "$xauthority_mode_valid" == true && "$xauthority_link_count_valid" == true && "$xauthority_entry_readable" == true ]] || safe_fail xauthority-metadata
 
 /usr/bin/openvt -c "$vt_number" -f -s -- \
   /usr/lib/xorg/Xorg "$display" "vt${vt_number}" -keeptty -noreset \
