@@ -71,15 +71,24 @@ MYDASHBOARD_EXPECTED_HEAD=<exact-sha> \
 MYDASHBOARD_EXPECTED_HEAD=<exact-sha> \
 MYDASHBOARD_RECEIPT_DIR=<bounded-output-directory> \
   scripts/mydashboard/build-linux-desktop.sh
+
+# sudo-free isolated build on ai-worker
+MYDASHBOARD_EXPECTED_HEAD=<exact-sha> \
+MYDASHBOARD_RECEIPT_DIR=<bounded-output-directory> \
+  scripts/mydashboard/build-linux-desktop-container.sh
 ```
 
-Both scripts reject a mismatched HEAD, unlocked inputs, missing packages, and
+All scripts reject a mismatched HEAD, unlocked inputs, missing packages, and
 tracked worktree changes. They do not start the application, read credentials,
 dispatch a provider, or write canonical state. The build script unsets common
 provider/signing credential variables before spawning dependency/build tools.
 It uses frozen JavaScript and Rust lockfiles, explicitly allows only the
 repository-declared `esbuild` lifecycle, and emits a redacted receipt with
 source HEAD/tree, lockfile digests, artifact basename, size, and SHA-256.
+The container wrapper additionally verifies the official Node 24.19.0 and
+rustup-init downloads against their published SHA-256 manifests, installs
+Rust 1.98.0, records the complete Ubuntu package set, and removes the
+container after the bounded build.
 
 ## Runtime-smoke boundary
 

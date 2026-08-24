@@ -16,6 +16,10 @@ const buildScript = readFileSync(
   join(root, "scripts/mydashboard/build-linux-desktop.sh"),
   "utf8",
 );
+const containerScript = readFileSync(
+  join(root, "scripts/mydashboard/build-linux-desktop-container.sh"),
+  "utf8",
+);
 
 describe("MyDashboard desktop acceptance contract", () => {
   it.each([
@@ -47,6 +51,11 @@ describe("MyDashboard desktop acceptance contract", () => {
     expect(buildScript).toContain("pnpm install --frozen-lockfile --ignore-scripts");
     expect(buildScript).toContain("cargo build --locked");
     expect(buildScript).toContain("artifactSha256");
+    expect(containerScript).toContain("ubuntu@sha256:");
+    expect(containerScript).toContain("sha256sum --check --strict");
+    expect(containerScript).toContain("--default-toolchain 1.98.0");
+    expect(containerScript).toContain("pnpm@9.15.9");
+    expect(containerScript).toContain("docker run --rm");
   });
 
   it("does not run a provider or consume signing/provider credentials", () => {
