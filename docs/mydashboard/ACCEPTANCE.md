@@ -5,7 +5,7 @@ These states are independent and must not be collapsed into “done”:
 | State | Current slice disposition | Required evidence |
 |---|---|---|
 | `sourceVerified` | verified at the starting baseline | exact fork/upstream head, tree, and 0/0 divergence |
-| `supplyChainVerified` | **false** | vulnerability-free exact lockfile without advisory allowlisting |
+| `supplyChainVerified` | **true** for this candidate | vulnerability-free exact lockfile without advisory allowlisting |
 | `workstationSeamVerified` | locally testable | default-off behavior, module lifecycle, projection redaction, accessibility |
 | `desktopCompileVerified` | **unverified** | locked `srelens-desktop` Rust compile on the accepted host or an explicitly isolated build environment |
 | `desktopPackageVerified` | **unverified** | production Tauri package plus digest bound to exact source HEAD/tree |
@@ -33,10 +33,21 @@ These states are independent and must not be collapsed into “done”:
 - `rkyv 0.7.46` and its unused transitive chain are absent;
 - `fix-path-env` has an exact manifest revision and matching lock revision;
 - no `rkyv` or `rsa` vulnerability suppression remains;
+- the exact lockfile contains no `rsa`, `sqlx-mysql`, or `sqlx-postgres` package;
+- the source-vendored `openidconnect` 4.0.1 compatibility fork uses exact
+  `ring 0.17.14` for its RSA algorithms and retains its upstream test suite;
+- the source-vendored SQLx facade/macro-core packages differ from their exact
+  crates.io archives only in the SQLite-scoped normalized manifests;
 - `cargo metadata --locked` succeeds;
 - Rust workspace build/test and `cargo audit` are recorded independently;
-- RUSTSEC-2023-0071 remains a blocker until the active `openidconnect → rsa`
-  path is safely removed, replaced, or fixed upstream.
+- RUSTSEC-2023-0071 is closed only when the empirical audit confirms both
+  former lock paths are absent and `cargo audit --file Cargo.lock` passes.
+
+The 2026-08-24 candidate audit met that condition: locked metadata passed,
+`cargo tree --locked -i rsa` found no package, the active SQLx feature tree was
+SQLite-only, and `cargo audit 0.22.2` scanned 744 lock dependencies with zero
+vulnerabilities. Its 18 non-vulnerability warnings remain reported separately
+and are not treated as advisory suppressions.
 
 ## Unverified boundaries
 

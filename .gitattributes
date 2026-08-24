@@ -1,0 +1,6 @@
+# Retained vendored source stays byte-identical to its immutable upstream.
+# Product-owned manifests and contract files are still checked normally.
+third_party/openidconnect-rs/src/** -whitespace
+third_party/sqlx-sqlite-only/sqlx/src/** -whitespace
+third_party/sqlx-sqlite-only/sqlx/README.md -whitespace
+third_party/sqlx-sqlite-only/sqlx-macros-core/src/** -whitespace

@@ -128,4 +128,5 @@ jobs:
           apps/desktop/src/workstation/WorkstationModule.test.ts
           apps/desktop/src/workstation/WorkstationShell.test.tsx
           apps/desktop/src/mydashboard/desktopBuildContract.test.ts
+          apps/desktop/src/mydashboard/supplyChainContract.test.ts
           apps/desktop/src/security-config.test.ts

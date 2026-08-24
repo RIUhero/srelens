@@ -1,6 +1,16 @@
 [workspace]
 resolver = "2"
 members = ["crates/agent", "crates/capability", "crates/mcp", "crates/kube", "crates/streams", "crates/server", "crates/registry", "crates/llm", "apps/desktop/src-tauri"]
+exclude = [
+    "third_party/openidconnect-rs",
+    "third_party/sqlx-sqlite-only/sqlx",
+    "third_party/sqlx-sqlite-only/sqlx-macros-core",
+]
+
+[patch.crates-io]
+openidconnect = { path = "third_party/openidconnect-rs" }
+sqlx = { path = "third_party/sqlx-sqlite-only/sqlx" }
+sqlx-macros-core = { path = "third_party/sqlx-sqlite-only/sqlx-macros-core" }
 
 [workspace.package]
 edition = "2021"
