@@ -125,6 +125,22 @@ The implementation at
 | `canonicalMutation` | **false** | Phase B returns an empty projection and exposes no mutation operation |
 | `phaseCStarted` | **false** | no provider execution plane, orchestration, scheduler, or canonical state was added |
 
+These dispositions preserve the implementation, protocol, registry, strict
+projection, exact-binary manager smoke, and remote CI evidence. They do not by
+themselves close strict Phase B acceptance. The current Phase B state is:
+
+| Strict Phase B state | Disposition |
+|---|---|
+| `phaseBState` | **awaiting-physical-runtime-smoke** |
+| `phaseBRuntimeEmpiricalVerified` | **false** |
+| `phaseBVerified` | **false** |
+
+Strict acceptance additionally requires an actual `ai-worker` physical-Xorg
+campaign for the exact current candidate: feature-OFF absence, feature-ON live
+Core rendering, fail-closed unavailable/malformed behavior, restart recovery,
+and complete Workstation/Core/WebKit/Xorg/VT cleanup. Phase A physical evidence
+cannot substitute for that Phase B candidate-bound campaign.
+
 The Phase A static fixture remains available only in the feature-OFF module
 construction path for its existing tests and is still non-production. The
 feature-ON product path has no fixture fallback and uses the live read-only
@@ -132,7 +148,8 @@ Core capability.
 
 ## Unverified boundaries
 
-Phase B does not claim provider execution, canonical Task/Workspace mutation,
+Phase B is not yet strictly accepted and does not claim provider execution,
+canonical Task/Workspace mutation,
 account/session lifecycle, local-model execution, sandboxing, service
 installation, release, deployment, restart, or rollback. Those remain outside
 the accepted Phase A and current Phase B scope. Phase C has not started, and

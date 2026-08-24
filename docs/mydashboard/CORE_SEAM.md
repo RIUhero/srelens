@@ -76,3 +76,20 @@ Local and `ai-worker` verification for that exact implementation tree:
 The first root-container regression attempt is diagnostic only: three
 permission-denial tests correctly required a non-root user, and two terminal
 tests required an explicit shell. The authoritative non-root reruns passed.
+
+## Strict runtime acceptance status
+
+The implementation and verification above establish the Core process,
+protocol, registry, strict projection, manager lifecycle, and headless package
+behavior. They do not substitute for an actual physical Workstation campaign.
+
+Until the exact current candidate passes feature-OFF and feature-ON execution,
+live empty-state interaction, bounded fail-closed fault injection, Core restart
+recovery, and complete physical Xorg/VT cleanup on `ai-worker`:
+
+- `phaseBState=awaiting-physical-runtime-smoke`;
+- `phaseBRuntimeEmpiricalVerified=false`;
+- `phaseBVerified=false`.
+
+Phase A remains accepted, Phase C has not started, and
+`wholeProductComplete=false`.
