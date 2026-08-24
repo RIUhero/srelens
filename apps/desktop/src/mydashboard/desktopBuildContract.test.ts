@@ -51,9 +51,10 @@ describe("MyDashboard desktop acceptance contract", () => {
     expect(buildScript).toContain("pnpm install --frozen-lockfile --ignore-scripts");
     expect(buildScript).toContain("cargo build --locked");
     expect(buildScript).toContain(
-      "pnpm --filter @srelens/desktop tauri build --bundles deb",
+      "pnpm --filter @srelens/desktop tauri build --bundles deb --ci",
     );
     expect(buildScript).not.toContain("tauri build -- --bundles");
+    expect(buildScript).toContain('"createUpdaterArtifacts":false');
     expect(buildScript).toContain("artifactSha256");
     expect(containerScript).toContain("ubuntu@sha256:");
     expect(containerScript).toContain('${BASH_SOURCE[0]}');
