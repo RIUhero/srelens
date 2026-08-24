@@ -46,7 +46,7 @@ docker run --rm \
       https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init
     curl --fail --silent --show-error --location --remote-name \
       https://static.rust-lang.org/rustup/dist/x86_64-unknown-linux-gnu/rustup-init.sha256
-    printf "%s  rustup-init\n" "$(cat rustup-init.sha256)" | sha256sum --check --strict
+    sha256sum --check --strict rustup-init.sha256
     chmod +x rustup-init
     export CARGO_HOME=/opt/cargo RUSTUP_HOME=/opt/rustup
     export PATH=/opt/node/bin:/opt/cargo/bin:$PATH
