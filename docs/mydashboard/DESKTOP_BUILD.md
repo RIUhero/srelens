@@ -11,8 +11,9 @@ Build, package, and runtime smoke are independent:
 - `desktopCompileVerified`: locked `srelens-desktop` Rust compile succeeds;
 - `desktopPackageVerified`: a production Tauri package is created and its
   SHA-256 is bound to the exact source HEAD and tree;
-- `desktopRuntimeSmokeVerified`: the actual app is exercised in an existing
-  `ai-worker` graphical session with the feature flag both off and on;
+- `desktopRuntimeSmokeVerified`: the actual app is exercised on an
+  `ai-worker`-owned physical graphical display with the feature flag both off
+  and on;
 - `desktopBuildVerified`: all three states above are true.
 
 A pinned container on `ai-worker` may provide compile/package evidence. It
@@ -90,10 +91,34 @@ rustup-init downloads against their published SHA-256 manifests, installs
 Rust 1.98.0, records the complete Ubuntu package set, and removes the
 container after the bounded build.
 
-## Runtime-smoke boundary
+## Accepted physical runtime smoke
 
-The actual `ai-worker` session observed by this slice was TTY-only with no
-`DISPLAY` or `WAYLAND_DISPLAY`. Xvfb/container smoke can test a WebView path in
-CI but is not substituted for the required actual graphical-session evidence.
-Until such a session exists, `desktopRuntimeSmokeVerified=false` and
-`desktopBuildVerified=false` remain mandatory.
+The exact candidate at HEAD
+`0acfc7ee8ad596b93211c5501c824dc278ac09e4` and tree
+`d2d6ef05d6ebc219f4bd5d45ea69b6785f9afa6e` was exercised on the real
+`ai-worker` display path, not Xvfb:
+
+- dedicated host Xorg `:77`, physical VT7, connected DP-1 at 1920x1080;
+- 600-second fail-closed watchdog and STOP sentinel;
+- separate isolated XDG state for feature-OFF and feature-ON production
+  packages;
+- no-home and no-network application sandbox;
+- OFF vault interaction and clean shutdown;
+- ON MyDashboard navigation and keyboard-driven Tasks/Workspaces/Tasks
+  interaction;
+- process-family, sensitive rendering, screenshot digest, receipt, orphan, and
+  shutdown checks;
+- Xorg socket removal and original `tty1` restoration.
+
+The authoritative `campaign-v4` runner and its independent post-run audit both
+passed with `providerDispatch=false`, `credentialsRead=false`, and zero runtime
+orphans. The supervisor used the pinned Ubuntu image with Docker networking
+disabled, a read-only container filesystem, and the host user home hidden; it
+only invoked the audited physical-Xorg harness and waited for shutdown. Xvfb
+diagnostics and the failed pre-v4 harness attempts remain non-acceptance
+evidence.
+
+Therefore `desktopCompileVerified=true`, `desktopPackageVerified=true`,
+`desktopRuntimeSmokeVerified=true`, and `desktopBuildVerified=true` for this
+Phase A candidate. The static Core projection remains visibly non-production;
+no live provider or Core behavior is inferred from it.

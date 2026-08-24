@@ -4,14 +4,14 @@ These states are independent and must not be collapsed into “done”:
 
 | State | Current slice disposition | Required evidence |
 |---|---|---|
-| `sourceVerified` | verified at the starting baseline | exact fork/upstream head, tree, and 0/0 divergence |
+| `sourceVerified` | **true** for the accepted runtime candidate | exact fork/upstream head, tree, and reviewed descendant lineage |
 | `supplyChainVerified` | **true** for this candidate | vulnerability-free exact lockfile without advisory allowlisting |
-| `workstationSeamVerified` | locally testable | default-off behavior, module lifecycle, projection redaction, accessibility |
-| `desktopCompileVerified` | **unverified** | locked `srelens-desktop` Rust compile on the accepted host or an explicitly isolated build environment |
-| `desktopPackageVerified` | **unverified** | production Tauri package plus digest bound to exact source HEAD/tree |
-| `desktopRuntimeSmokeVerified` | **false** | clean start/interaction/shutdown in an actual `ai-worker` graphical session |
-| `desktopBuildVerified` | **false** | compile, package, and actual graphical runtime-smoke gates all pass |
-| `runtimeEmpiricalVerified` | **false** | separately approved bounded runtime campaign; fixtures never qualify |
+| `workstationSeamVerified` | **true** for the accepted runtime candidate | default-off behavior, module lifecycle, projection redaction, accessibility, and physical interaction |
+| `desktopCompileVerified` | **true** | locked `srelens-desktop` Rust compile on the accepted Ubuntu build environment |
+| `desktopPackageVerified` | **true** | feature-OFF and feature-ON production Tauri packages plus digests bound to exact source HEAD/tree |
+| `desktopRuntimeSmokeVerified` | **true** | clean start/interaction/shutdown on an `ai-worker`-owned physical Xorg display |
+| `desktopBuildVerified` | **true** | compile, package, and actual graphical runtime-smoke gates all pass |
+| `runtimeEmpiricalVerified` | **true for the Phase A desktop-runtime scope** | approved bounded execution of the production packages; the static projection remains non-production and proves no live Core/provider behavior |
 
 ## Provider-free seam gate
 
@@ -49,10 +49,68 @@ SQLite-only, and `cargo audit 0.22.2` scanned 744 lock dependencies with zero
 vulnerabilities. Its 18 non-vulnerability warnings remain reported separately
 and are not treated as advisory suppressions.
 
+## Phase A physical runtime receipt
+
+The accepted production artifacts and physical runtime campaign are bound to:
+
+| Field | Accepted value |
+|---|---|
+| source HEAD | `0acfc7ee8ad596b93211c5501c824dc278ac09e4` |
+| source tree | `d2d6ef05d6ebc219f4bd5d45ea69b6785f9afa6e` |
+| host/display | `ai-worker`, Xorg `:77`, VT7, connected `DP-1` at 1920x1080 |
+| feature-OFF package | `14dbcfc635ada6213a8c676456b85afeea931827885b2c7c42970741ce366830` |
+| feature-ON package | `7a6ba5c7389839b31a096b9306cf10c7b3d798f087fa4ed55133a26446cba9cf` |
+| feature-OFF binary | `bf214b363ac240ea0f02070a1d3a64dbeead0f89dca42df50844a75f89974a08` |
+| feature-ON binary | `443d1e3a01cafc867985abdd5bae2a3e36c9baaf352ba486d6e34a118e6b0023` |
+
+The authoritative final campaign is `campaign-v4`. Earlier campaigns are
+retained only as failed harness diagnostics and do not contribute acceptance.
+The final campaign proved:
+
+- feature OFF rendered the upstream SRELens vault and did not render
+  MyDashboard; the recovery-checkbox interaction changed the image and the app
+  shut down cleanly;
+- feature ON rendered the workstation navigation, Tasks, Workspaces,
+  `PASS`/`BLOCKED`/`UNVERIFIED`, and the visible
+  `Static fixture · not runtime evidence` disclosure;
+- Tasks → Workspaces → Tasks was exercised through keyboard focus navigation;
+- both executions used separate empty XDG state directories inside a
+  no-home, `--unshare-net` bubblewrap boundary;
+- the observed process family contained `srelens`, `WebKitNetworkProcess`, and
+  `WebKitWebProcess` and left zero matching orphan processes;
+- OCR-sensitive-field scans and an independent second scan passed before the
+  transient OCR text was removed;
+- all retained screenshots and receipts are owner-only regular files with one
+  hard link, and their recomputed SHA-256 values match the redacted receipts;
+- `providerDispatch=false`, `credentialsRead=false`, no canonical state was
+  created, and the enabled fixture retains `productionUsable=false`;
+- the STOP sentinel ended Xorg, the watchdog reported `orphan=false`, the X11
+  socket disappeared, and the original `tty1` was restored.
+
+Screenshot digests:
+
+| Mode/view | SHA-256 |
+|---|---|
+| OFF initial | `100a0a5d6f22954e57b6238cf741afab0ff9f984f1198fc5cc23efb7a24c56ac` |
+| OFF toggled | `bf0fdf80825db34b1639e329f63b9fe4095dc6a7f9afb8dbfa08bf4f5cd512e1` |
+| OFF restored | `cb2f36b719db8a8ad1641f06f76b1488401b54acd64d59ef1ba8100373392c86` |
+| ON initial | `332b8eafa75931cd59f3794b8473028a433379bb2a4a4d922b87ef28cb0f0561` |
+| ON Tasks | `d6474b47319996e53e74a00950d9a3b62bc1e2e575ce868fc460ee88e3ebc447` |
+| ON Workspaces | `bd9bd06950a0addf6c7d6b8492527c84da96752ef7ced9d6e146a21dbf6f1f85` |
+| ON Tasks return | `14d87c6458f900fa6e189e5612c800ab93ed103e0070884df96dbc09c4095fad` |
+
+The physical-Xorg supervisor used the already-present immutable Ubuntu image
+`ubuntu@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517`
+with Docker networking disabled and a read-only container root. The host user
+home was hidden behind an empty tmpfs and only the owner-only campaign
+directory was re-exposed. The supervisor exited zero after the redacted runner
+receipt, Xorg shutdown, and VT restoration all completed.
+
 ## Unverified boundaries
 
-Frontend build success and `cargo check` are not a Tauri desktop build.
-Container or CI compilation may close compile/package evidence, but cannot
-replace an actual graphical-session smoke on `ai-worker`. No live provider,
-local model, sandbox, service installation, release, deployment, restart, or
-rollback is authorized or implied by this slice.
+The Phase A desktop-runtime gate is closed, but the rendered Core projection is
+still a static redacted fixture. It proves the production desktop shell and
+read-only seam, not live Core transport, provider execution, canonical
+mutation, or production usability. No live provider, local model, sandbox,
+service installation, release, deployment, restart, or rollback is authorized
+or implied by this slice.
