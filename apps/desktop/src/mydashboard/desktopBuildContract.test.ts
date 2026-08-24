@@ -46,6 +46,9 @@ describe("MyDashboard desktop acceptance contract", () => {
     expect(workflow).toContain("hashFiles('Cargo.lock')");
     expect(workflow).toContain("cache-dependency-path: pnpm-lock.yaml");
     expect(workflow).toContain("MYDASHBOARD_EXPECTED_HEAD");
+    expect(workflow).toContain(
+      "ref: ${{ github.event.pull_request.head.sha || github.sha }}",
+    );
     expect(checkScript).toContain("git rev-parse HEAD");
     expect(checkScript).toContain("git rev-parse 'HEAD^{tree}'");
     expect(buildScript).toContain("pnpm install --frozen-lockfile --ignore-scripts");
