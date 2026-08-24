@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/agent", "crates/capability", "crates/mcp", "crates/kube", "crates/streams", "crates/server", "crates/registry", "crates/llm", "apps/desktop/src-tauri"]
+members = ["crates/agent", "crates/capability", "crates/mcp", "crates/kube", "crates/streams", "crates/server", "crates/registry", "crates/llm", "crates/mydashboard-core", "apps/desktop/src-tauri"]
 exclude = [
     "third_party/openidconnect-rs",
     "third_party/sqlx-sqlite-only/sqlx",

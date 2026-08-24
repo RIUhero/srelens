@@ -21,6 +21,11 @@ pnpm rebuild esbuild
 pnpm typecheck
 pnpm build
 cargo build --locked -p srelens-desktop --features custom-protocol --release
+scripts/mydashboard/check-core-read-only.sh target/release/srelens
+SRELENS_PHASE_B_BINARY="$repo_root/target/release/srelens" \
+  cargo test --locked -p srelens-desktop \
+    mydashboard_core::tests::empirical_exact_binary_bridge_reads_and_shuts_down_cleanly \
+    -- --ignored --exact
 pnpm --filter @srelens/desktop tauri build --bundles deb --ci \
   --config '{"bundle":{"createUpdaterArtifacts":false}}'
 

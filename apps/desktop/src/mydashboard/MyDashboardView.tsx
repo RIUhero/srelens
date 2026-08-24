@@ -21,6 +21,8 @@ export function MyDashboardView({ reader }: { reader: CoreProjectionReader }) {
 
   useEffect(() => {
     let active = true;
+    setProjection(null);
+    setFailed(false);
     void reader.read().then(
       (value) => active && setProjection(value),
       () => active && setFailed(true),
@@ -30,6 +32,8 @@ export function MyDashboardView({ reader }: { reader: CoreProjectionReader }) {
       active = false;
     };
   }, [reader]);
+
+  const liveCore = reader.source === "core-read-only-capability" && reader.productionUsable;
 
   const workspaces = useMemo(() => {
     const counts = new Map<string, Record<TaskState, number>>();
@@ -54,8 +58,8 @@ export function MyDashboardView({ reader }: { reader: CoreProjectionReader }) {
               Redacted Core projection. No provider controls or canonical state are present here.
             </p>
           </div>
-          <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-200">
-            Static fixture · not runtime evidence
+          <span className={`rounded-md border px-3 py-1.5 text-xs font-medium ${liveCore ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-200" : "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-200"}`}>
+            {liveCore ? "Live Core · read-only" : "Static fixture · not runtime evidence"}
           </span>
         </header>
 
@@ -91,6 +95,11 @@ export function MyDashboardView({ reader }: { reader: CoreProjectionReader }) {
             tabIndex={0}
             className="grid gap-3 outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
+            {projection.tasks.length === 0 && (
+              <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+                No tasks are projected. Phase B creates no canonical task state.
+              </p>
+            )}
             {projection.tasks.map((task) => (
               <article key={task.taskPublicId} className="rounded-lg border border-border bg-card p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -118,6 +127,11 @@ export function MyDashboardView({ reader }: { reader: CoreProjectionReader }) {
             tabIndex={0}
             className="grid gap-3 outline-none focus-visible:ring-2 focus-visible:ring-ring sm:grid-cols-2"
           >
+            {workspaces.length === 0 && (
+              <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground sm:col-span-2">
+                No workspaces are projected. Phase B creates no canonical workspace state.
+              </p>
+            )}
             {workspaces.map(([workspace, counts]) => (
               <article key={workspace} className="rounded-lg border border-border bg-card p-4 shadow-sm">
                 <h2 className="font-mono text-sm font-semibold">{workspace}</h2>

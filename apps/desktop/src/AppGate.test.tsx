@@ -20,11 +20,11 @@ vi.mock("./mydashboard/module", () => ({
     },
     capabilityRegistration: {
       owner: "srelens-capability::Registry",
-      capabilityIds: [],
+      capabilityIds: ["mydashboard.readProjection"],
     },
     projectionSource: {
-      kind: "static-redacted-fixture",
-      productionUsable: false,
+      kind: "core-read-only-capability",
+      productionUsable: true,
     },
     lifecycle: {},
     render: () => <p>MyDashboard view</p>,

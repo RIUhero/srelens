@@ -28,4 +28,18 @@ describe("MyDashboardView", () => {
     expect(screen.getByRole("alert").textContent).toContain("failed closed");
     expect(document.body.textContent).not.toContain("token=private");
   });
+
+  it("renders a live empty Core projection without inventing canonical state", async () => {
+    const reader: CoreProjectionReader = {
+      source: "core-read-only-capability",
+      productionUsable: true,
+      read: async () => ({ tasks: [] }),
+    };
+    render(<MyDashboardView reader={reader} />);
+    expect(await screen.findByText("Live Core · read-only")).toBeTruthy();
+    expect(screen.getByText("No tasks are projected. Phase B creates no canonical task state.")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "workspaces" }));
+    expect(screen.getByText("No workspaces are projected. Phase B creates no canonical workspace state.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /run|dispatch|provider/i })).toBeNull();
+  });
 });

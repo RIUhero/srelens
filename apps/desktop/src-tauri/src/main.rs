@@ -6,14 +6,31 @@ use std::sync::Arc;
 use srelens_mcp::auth::TokenStore as _;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+
+    // Phase B Core mode is dispatched before environment credential lookup,
+    // PATH repair, kube timeout setup, GTK/AppImage initialization, config
+    // resolution, keychain access, or any provider surface. The parent also
+    // launches it with an empty environment.
+    if args.get(1).map(String::as_str) == Some("--mydashboard-core-stdio") {
+        if srelens_mydashboard_core::run_stdio().is_err() {
+            eprintln!("mydashboard core stopped: io_error");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     // `SRELENS_MASTER_PASSWORD`: captured into a LOCAL and immediately
     // scrubbed from the environment, FIRST, before any run-mode dispatch —
-    // every run mode (GUI, `--serve`, `--mcp-stdio`, `--mcp-http`) can spawn
+    // every credential-aware run mode (GUI, `--serve`, `--mcp-stdio`,
+    // `--mcp-http`) can spawn
     // Helm binaries and kubectl exec credential plugins, and none of them
     // may inherit the vault password. Only `--mcp-http` consumes the value
     // (by move); every other mode drops it before running, so the plaintext
     // does not sit in process memory for the whole session.
-    let master_password = std::env::var("SRELENS_MASTER_PASSWORD").ok().filter(|p| !p.is_empty());
+    let master_password = std::env::var("SRELENS_MASTER_PASSWORD")
+        .ok()
+        .filter(|p| !p.is_empty());
     std::env::remove_var("SRELENS_MASTER_PASSWORD");
     // GUI launches (Finder/Dock) inherit launchd's minimal PATH, not the
     // user's shell PATH — kubeconfig exec plugins (kubectl, kubectl-oidc_login,
@@ -35,15 +52,13 @@ fn main() {
     {
         let extra = std::env::var("GIO_EXTRA_MODULES").ok();
         let existing = std::env::var("GIO_MODULE_DIR").ok();
-        if let Some(dir) = srelens_desktop_lib::gio_module_dir_for_appimage(
-            extra.as_deref(),
-            existing.as_deref(),
-        ) {
+        if let Some(dir) =
+            srelens_desktop_lib::gio_module_dir_for_appimage(extra.as_deref(), existing.as_deref())
+        {
             std::env::set_var("GIO_MODULE_DIR", dir);
         }
     }
 
-    let args: Vec<String> = std::env::args().collect();
     // `serve [addr] [--data DIR]` runs the web server (frontend + capability
     // API) instead of the GUI. Sessions + OIDC/dev-login auth are required; default bind is loopback.
     if args.get(1).map(String::as_str) == Some("serve") {
@@ -91,7 +106,12 @@ fn main() {
             .filter(|a| !a.starts_with("--"))
             .cloned()
             .unwrap_or_else(|| "127.0.0.1:8765".into());
-        run_mcp_http(&addr, allow_destructive, allow_sensitive_reads, master_password);
+        run_mcp_http(
+            &addr,
+            allow_destructive,
+            allow_sensitive_reads,
+            master_password,
+        );
         return;
     }
     drop(master_password);
@@ -182,7 +202,10 @@ fn run_mcp_http(
         }
     }
     let store = srelens_desktop_lib::vault::VaultTokenStore(vault.clone());
-    let token = match std::env::var(TOKEN_ENV).ok().filter(|v| !v.trim().is_empty()) {
+    let token = match std::env::var(TOKEN_ENV)
+        .ok()
+        .filter(|v| !v.trim().is_empty())
+    {
         Some(hex) => srelens_mcp::auth::Token::from_hex(&hex).unwrap_or_else(|| {
             // The value itself is never echoed — that's the whole point of
             // keeping it out of argv.

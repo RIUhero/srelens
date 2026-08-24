@@ -5569,6 +5569,7 @@ dependencies = [
  "srelens-kube",
  "srelens-llm",
  "srelens-mcp",
+ "srelens-mydashboard-core",
  "srelens-registry",
  "srelens-server",
  "srelens-streams",
@@ -5645,6 +5646,14 @@ dependencies = [
  "subtle",
  "tokio",
  "tower",
+]
+
+[[package]]
+name = "srelens-mydashboard-core"
+version = "0.7.2"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

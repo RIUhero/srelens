@@ -1,4 +1,5 @@
 import type { WorkstationModule } from "../workstation/WorkstationModule";
+import { capabilityCoreProjectionReader, CORE_PROJECTION_CAPABILITY_ID } from "./capabilityProjection";
 import { MyDashboardView } from "./MyDashboardView";
 import { staticCoreProjectionReader } from "./staticProjection";
 
@@ -7,6 +8,7 @@ export function myDashboardFeatureEnabled(value: unknown = import.meta.env.VITE_
 }
 
 export function createMyDashboardModule(featureFlag = myDashboardFeatureEnabled()): WorkstationModule {
+  const reader = featureFlag ? capabilityCoreProjectionReader : staticCoreProjectionReader;
   return Object.freeze({
     id: "mydashboard",
     label: "MyDashboard",
@@ -15,18 +17,17 @@ export function createMyDashboardModule(featureFlag = myDashboardFeatureEnabled(
       label: "MyDashboard",
       ariaLabel: "Open read-only MyDashboard",
     },
-    // This slice registers no fake provider capability. Future Core access
-    // must add a read-only Capability to the existing Rust Registry and list
-    // that exact id here; this object is not a second registry.
+    // The exact read-only Core capability lives in the existing Rust Registry.
+    // This module remains composition metadata, never a second registry.
     capabilityRegistration: {
       owner: "srelens-capability::Registry" as const,
-      capabilityIds: [],
+      capabilityIds: featureFlag ? [CORE_PROJECTION_CAPABILITY_ID] : [],
     },
     projectionSource: {
-      kind: staticCoreProjectionReader.source,
-      productionUsable: staticCoreProjectionReader.productionUsable,
+      kind: reader.source,
+      productionUsable: reader.productionUsable,
     },
     lifecycle: {},
-    render: () => <MyDashboardView reader={staticCoreProjectionReader} />,
+    render: () => <MyDashboardView reader={reader} />,
   });
 }

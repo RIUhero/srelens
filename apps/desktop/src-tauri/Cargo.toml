@@ -51,6 +51,7 @@ srelens-kube = { path = "../../../crates/kube" }
 srelens-streams = { path = "../../../crates/streams" }
 srelens-server = { path = "../../../crates/server" }
 srelens-registry = { path = "../../../crates/registry" }
+srelens-mydashboard-core = { path = "../../../crates/mydashboard-core" }
 # MCP bearer token storage: prefer the OS keychain, falling back to the 0600
 # file (`FileTokenStore`) where none exists. Feature selection:
 #   - apple-native: macOS/iOS Keychain via `security-framework`.
@@ -74,7 +75,7 @@ getrandom = "0.2"
 tauri-plugin-biometry = "0.2"
 # Master-password key derivation for the vault (issue #208 follow-up).
 argon2 = "0.5"
-tokio = { version = "1", features = ["rt-multi-thread", "io-std", "io-util", "macros", "process"] }
+tokio = { version = "1", features = ["rt-multi-thread", "io-std", "io-util", "macros", "process", "sync", "time"] }
 uuid = { version = "1", features = ["v4"] }
 async-trait = "0.1"
 # Blocking HTTP for Toolbox tool downloads (run inside spawn_blocking).

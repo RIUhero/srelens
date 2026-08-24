@@ -18,6 +18,7 @@ mod helm;
 mod logs;
 mod mcp;
 mod mcp_confirm;
+mod mydashboard_core;
 pub mod mcp_watch;
 mod overview_snapshot;
 mod settings;
@@ -262,7 +263,13 @@ pub fn run() {
     // One shared client cache: request/response capabilities AND live watches
     // reuse the same authenticated kube-rs clients.
     let cache = ClientCache::new_many(capabilities::all_kubeconfig_paths());
-    let registry = capabilities::build_registry_with(cache.clone());
+    let mut registry = capabilities::build_registry_with(cache.clone());
+    if mydashboard_core::feature_compiled() {
+        mydashboard_core::register(
+            &mut registry,
+            std::sync::Arc::new(mydashboard_core::CoreProcessManager::from_current_exe()),
+        );
+    }
 
     // single-instance is registered BEFORE every other plugin, as the plugin
     // requires: it has to claim the lock and hand a second launch's argv over

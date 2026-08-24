@@ -87,6 +87,7 @@ jobs:
         env:
           MYDASHBOARD_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           MYDASHBOARD_RECEIPT_DIR: ${{ runner.temp }}/mydashboard-desktop-receipt
+          VITE_SRELENS_MYDASHBOARD: "1"
         run: scripts/mydashboard/build-linux-desktop.sh
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -124,6 +125,8 @@ jobs:
         run: >-
           pnpm exec vitest run
           apps/desktop/src/mydashboard/coreProjection.test.ts
+          apps/desktop/src/mydashboard/capabilityProjection.test.ts
+          apps/desktop/src/mydashboard/phaseBContract.test.ts
           apps/desktop/src/mydashboard/MyDashboardView.test.tsx
           apps/desktop/src/workstation/WorkstationModule.test.ts
           apps/desktop/src/workstation/WorkstationShell.test.tsx

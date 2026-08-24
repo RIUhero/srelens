@@ -13,12 +13,21 @@ describe("WorkstationModule", () => {
     expect(enabledWorkstationModules([createMyDashboardModule(false)])).toEqual([]);
   });
 
-  it("declares the existing Rust registry and no fake provider capability", () => {
+  it("declares one read-only Core capability in the existing Rust registry", () => {
     const module = createMyDashboardModule(true);
     expect(module.capabilityRegistration).toEqual({
       owner: "srelens-capability::Registry",
-      capabilityIds: [],
+      capabilityIds: ["mydashboard.readProjection"],
     });
+    expect(module.projectionSource).toEqual({
+      kind: "core-read-only-capability",
+      productionUsable: true,
+    });
+  });
+
+  it("keeps the disabled path process- and capability-free", () => {
+    const module = createMyDashboardModule(false);
+    expect(module.capabilityRegistration.capabilityIds).toEqual([]);
     expect(module.projectionSource).toEqual({
       kind: "static-redacted-fixture",
       productionUsable: false,
