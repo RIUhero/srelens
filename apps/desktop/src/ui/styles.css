@@ -597,6 +597,14 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+
+/* The optional workstation shell owns the viewport height. Its base SRELens
+   contribution must fill the remaining area instead of opening a second
+   100vh box below the module navigation. This selector is unreachable while
+   every workstation feature flag is off. */
+.fl-workstation__content > .fl-app {
+  height: 100%;
+}
 .fl-app--no-cluster {
   grid-template-columns: 75px 1fr;
 }
