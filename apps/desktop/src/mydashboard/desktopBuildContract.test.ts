@@ -1,5 +1,3 @@
- 1번: printf: --: 부적절한 옵션
-printf: 사용법: printf [-v <변수>] <출력형식> [<인자>]
 // @vitest-environment node
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
