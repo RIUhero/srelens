@@ -12,11 +12,15 @@ results=$2
 xauthority=$3
 shift 3
 x11_socket_dir=${MYDASHBOARD_X11_SOCKET_DIR:-/tmp/.X11-unix}
+runtime_lib="$campaign/runtime/root/usr/lib/x86_64-linux-gnu"
+gst_plugins="$campaign/runtime/gst-min"
 
 [[ -d "$campaign" && ! -L "$campaign" ]] || fail invalid-campaign-source
 [[ -d "$results" && ! -L "$results" ]] || fail invalid-results-source
 [[ -d "$x11_socket_dir" && ! -L "$x11_socket_dir" ]] || fail invalid-x11-source
 [[ -f "$xauthority" && ! -L "$xauthority" ]] || fail invalid-xauthority
+[[ -d "$runtime_lib" && ! -L "$runtime_lib" ]] || fail invalid-runtime-library-closure
+[[ -d "$gst_plugins" && ! -L "$gst_plugins" ]] || fail invalid-gstreamer-closure
 [[ $(stat -c %u "$campaign") == "$EUID" && $(stat -c %a "$campaign") == 700 ]] || fail unsafe-campaign-metadata
 [[ $(stat -c %u "$results") == "$EUID" && $(stat -c %a "$results") == 700 ]] || fail unsafe-results-metadata
 [[ $(stat -c %u "$xauthority") == "$EUID" ]] || fail unsafe-xauthority-owner
@@ -65,6 +69,12 @@ exec /usr/bin/bwrap \
   --setenv XDG_CACHE_HOME /run/runtime/cache \
   --setenv XDG_RUNTIME_DIR /run/runtime \
   --setenv XAUTHORITY /run/Xauthority \
+  --setenv LD_LIBRARY_PATH /campaign/source/runtime/root/usr/lib/x86_64-linux-gnu \
+  --setenv GST_PLUGIN_PATH /campaign/source/runtime/gst-min \
+  --setenv GST_PLUGIN_SYSTEM_PATH /campaign/source/runtime/gst-min \
+  --setenv GST_REGISTRY /run/runtime/gstreamer-registry.bin \
+  --setenv GDK_BACKEND x11 \
+  --setenv LANG C.UTF-8 \
   --remount-ro / \
   --chdir /campaign/source \
   -- "$@"

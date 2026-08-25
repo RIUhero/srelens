@@ -87,7 +87,7 @@ Until the exact current candidate passes feature-OFF and feature-ON execution,
 live empty-state interaction, bounded fail-closed fault injection, Core restart
 recovery, and complete physical Xorg/VT cleanup on `ai-worker`:
 
-- `phaseBState=awaiting-physical-runtime-smoke`;
+- `phaseBState=awaiting-runtime-incident-correction`;
 - `phaseBRuntimeEmpiricalVerified=false`;
 - `phaseBVerified=false`.
 

@@ -18,6 +18,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 mkdir -m 0700 "$campaign" "$results" "$x11" "$host_private"
+mkdir -p "$campaign/runtime/root/usr/lib/x86_64-linux-gnu" "$campaign/runtime/gst-min"
 printf 'read-only artifact\n' >"$campaign/artifact"
 chmod 0400 "$campaign/artifact"
 printf 'must remain hidden\n' >"$host_private/sentinel"
@@ -60,11 +61,16 @@ MYDASHBOARD_X11_SOCKET_DIR="$x11" "$runner" "$campaign" "$results" "$xauthority"
     test ! -e /host-private
     test ! -e /home/host-private
     test ! -e /campaign/source/symlink-escape
+    test "$LD_LIBRARY_PATH" = /campaign/source/runtime/root/usr/lib/x86_64-linux-gnu
+    test "$GST_PLUGIN_PATH" = /campaign/source/runtime/gst-min
+    test "$GST_PLUGIN_SYSTEM_PATH" = /campaign/source/runtime/gst-min
+    test "$GST_REGISTRY" = /run/runtime/gstreamer-registry.bin
     touch /campaign/ephemeral
     test -f /campaign/ephemeral
     ! touch /outside-root 2>/dev/null
     ! touch /usr/system-mutation 2>/dev/null
     ! touch /campaign/source/artifact 2>/dev/null
+    ! touch /campaign/source/runtime/root/usr/lib/x86_64-linux-gnu/mutation 2>/dev/null
     ! sh -c "printf mutation >>/campaign/source/artifact" 2>/dev/null
     printf bounded > /results/contract-receipt
     test "$(cat /results/contract-receipt)" = bounded
@@ -111,4 +117,4 @@ fi
 [[ $(count_comm srelens) == "$before_srelens" ]]
 [[ $(count_comm bwrap) == "$before_bwrap" ]]
 [[ ! -e "$results/provider-dispatch" && ! -e "$results/core-started" ]]
-printf 'phase-b-bwrap-contract=passed tests=18 provider-dispatch=false core-started=false residue=0\n'
+printf 'phase-b-bwrap-contract=passed tests=22 provider-dispatch=false core-started=false residue=0\n'

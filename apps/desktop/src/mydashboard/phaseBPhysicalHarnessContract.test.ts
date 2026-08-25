@@ -7,6 +7,8 @@ const root = join(__dirname, "../../../..");
 const sandbox = readFileSync(join(root, "scripts/mydashboard/run-phase-b-bwrap.sh"), "utf8");
 const contract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-bwrap-contract.sh"), "utf8");
 const harness = readFileSync(join(root, "scripts/mydashboard/phase-b-physical-root-harness.sh"), "utf8");
+const readiness = readFileSync(join(root, "scripts/mydashboard/wait-webdriver-ready.sh"), "utf8");
+const readinessContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-webdriver-readiness.sh"), "utf8");
 const xauthorityRootContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-xauthority-root.sh"), "utf8");
 
 describe("Phase B physical Bubblewrap incident regression", () => {
@@ -28,7 +30,34 @@ describe("Phase B physical Bubblewrap incident regression", () => {
     expect(sandbox).toContain('--ro-bind "$campaign_real" /campaign/source');
     expect(sandbox).toContain('--bind "$results_real" /results');
     expect(sandbox).toContain('--ro-bind "$xauthority" /run/Xauthority');
+    expect(sandbox).toContain("--setenv LD_LIBRARY_PATH /campaign/source/runtime/root/usr/lib/x86_64-linux-gnu");
+    expect(sandbox).toContain("--setenv GST_PLUGIN_SYSTEM_PATH /campaign/source/runtime/gst-min");
     expect(sandbox).not.toMatch(/--bind \/ \/|--share-net/);
+  });
+
+  it("requires a campaign-pinned runtime closure before touching Xorg", () => {
+    expect(harness).toContain("safe_fail runtime-closure");
+    expect(harness).toContain("safe_fail webdriver-linkage");
+    expect(harness).toContain("safe_fail webdriver-executable");
+    expect(harness).toContain("safe_fail runner-readiness-contract");
+    expect(harness).toContain("safe_fail runtime-file-digest");
+    expect(harness).toContain("safe_fail runtime-symlink-digest");
+    expect(harness).toContain("safe_fail runtime-symlink-escape");
+    expect(harness.indexOf("safe_fail webdriver-executable")).toBeLessThan(harness.indexOf("/usr/bin/openvt"));
+  });
+
+  it("classifies bounded process, listener, empty-reply, and protocol readiness failures", () => {
+    for (const classification of [
+      "child-premature-exit",
+      "listener-timeout",
+      "empty-reply",
+      "protocol-not-ready",
+      "readiness-timeout",
+    ]) {
+      expect(readiness).toContain(classification);
+    }
+    expect(readiness).toContain(".value.ready == true");
+    expect(readinessContract).toContain("phase-b-webdriver-readiness-contract=passed tests=5");
   });
 
   it("covers the incident, escape attempts, early exit, and zero-side-effect cleanup", () => {

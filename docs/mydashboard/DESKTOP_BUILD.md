@@ -140,3 +140,22 @@ replacement Xauthority flow writes as `karasani`, validates a readable display
 entry without rendering it, and removes only captured campaign-local file
 identities on success or failure. Physical Phase B runtime remains unverified
 until a new exact candidate passes the full campaign.
+
+A later campaign for candidate `996a31725eaea5d483863dc8c32960cef7eccee9`
+reached the isolated driver lifecycle but failed at `off-session`. The outer
+tauri-driver listener accepted both `/status` and `/session` connections, then
+closed them with no HTTP response because its native WebKitWebDriver could not
+load `libsoup-3.0.so.0` and never established its listener. The generated
+runner also allowed its 30-second status loop to expire without asserting
+protocol readiness before issuing `/session`; curl error 52 was therefore a
+symptom, not the root cause. The SSH caller was not causal: Xauthority,
+`openvt`, Xorg `:77`, and `xdpyinfo` had already passed, and the harness does
+not pass the caller TTY or SSH session bus into the sandbox.
+
+That campaign and command are withdrawn. Its cleanup is independently audited:
+tty1 restored, Xorg `:77` socket/process absent, product/driver/Core/Bubblewrap
+campaign residue zero, Xauthority lock/temp residue absent, STOP present, and
+no physical receipt. The replacement requires a manifest-pinned runtime
+closure, validates native linkage and executability before Xorg, and requires
+bounded process/listener/protocol readiness with explicit premature-exit,
+empty-reply, and timeout classifications.

@@ -146,6 +146,7 @@ jobs:
           sudo apt-get install -y --no-install-recommends bubblewrap xauth
       - name: Execute root and mount-boundary regressions
         run: |
+          scripts/mydashboard/test-phase-b-webdriver-readiness.sh
           sudo MYDASHBOARD_TEST_RUN_USER="$USER" \
             scripts/mydashboard/test-phase-b-xauthority-root.sh
           # Ubuntu 24 hosted runners restrict unprivileged user namespaces;

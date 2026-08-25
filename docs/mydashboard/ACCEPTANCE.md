@@ -131,7 +131,7 @@ themselves close strict Phase B acceptance. The current Phase B state is:
 
 | Strict Phase B state | Disposition |
 |---|---|
-| `phaseBState` | **awaiting-physical-runtime-smoke** |
+| `phaseBState` | **awaiting-runtime-incident-correction** |
 | `phaseBRuntimeEmpiricalVerified` | **false** |
 | `phaseBVerified` | **false** |
 
@@ -144,7 +144,7 @@ root-run `xauth` atomically replaced the pre-created authority file with a
 root-owned file. Neither attempt contributes feature-OFF, feature-ON, Core, or
 physical-runtime acceptance. With the source correction and provider-free
 regressions in place, the state returns to
-`phaseBState=awaiting-physical-runtime-smoke`, with
+`phaseBState=awaiting-runtime-incident-correction`, with
 `phaseBRuntimeEmpiricalVerified=false` and `phaseBVerified=false`.
 
 The corrected authority boundary pre-creates the file for the final owner,
@@ -153,6 +153,17 @@ checks owner/mode/link/type and display-entry readability, immediately drops
 the cookie variable, and records only six safe booleans. Failure cleanup is
 limited to exact campaign-local authority/lock/temp identities captured by
 inode without rendering the inode, cookie, path, UID, or raw command output.
+
+Candidate `996a31725eaea5d483863dc8c32960cef7eccee9` subsequently reached
+feature-OFF session startup and failed before application launch. Its bundled
+native driver lacked the required `libsoup-3.0.so.0` runtime closure;
+tauri-driver accepted the local HTTP connection but returned no body while the
+generated runner's readiness loop incorrectly fell through on timeout. The
+resulting curl 52 is diagnostic only. Cleanup restored tty1 and left no Xorg,
+product, driver, WebKit, Core, campaign Bubblewrap, listener, or Xauthority
+residue. The exact campaign, harness, and sudo command are withdrawn. Phase B
+remains unverified while the candidate-bound runtime closure and executable
+bounded-readiness correction proceed.
 
 Strict acceptance additionally requires an actual `ai-worker` physical-Xorg
 campaign for the exact current candidate: feature-OFF absence, feature-ON live

@@ -10,6 +10,8 @@ run_user=karasani
 campaign=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 results="$campaign/results"
 xauthority="$campaign/Xauthority"
+runtime_lib="$campaign/runtime/root/usr/lib/x86_64-linux-gnu"
+gst_plugins="$campaign/runtime/gst-min"
 xorg_pid=
 original_vt=
 xauthority_cleanup_paths=()
@@ -94,10 +96,31 @@ trap cleanup EXIT INT TERM
 [[ $EUID -eq 0 ]] || safe_fail root-required
 [[ -d "$campaign" && ! -L "$campaign" && -d "$results" && ! -L "$results" ]] || safe_fail campaign
 (cd "$campaign" && sha256sum --check manifest.sha256 >/dev/null) || safe_fail manifest
-for file in root-harness.sh runner.sh tools/run-phase-b-bwrap.sh; do
+for file in root-harness.sh runner.sh tools/run-phase-b-bwrap.sh tools/wait-webdriver-ready.sh; do
   target="$campaign/$file"
   [[ -f "$target" && ! -L "$target" && $(stat -c %h "$target") == 1 && $(stat -c %U "$target") == "$run_user" && $(stat -c %a "$target") == 700 ]] || safe_fail harness-metadata
 done
+grep -Fq 'tools/wait-webdriver-ready.sh' "$campaign/runner.sh" || safe_fail runner-readiness-contract
+[[ -d "$runtime_lib" && ! -L "$runtime_lib" && -d "$gst_plugins" && ! -L "$gst_plugins" ]] || safe_fail runtime-closure
+[[ -f "$campaign/runtime-files.sha256" && ! -L "$campaign/runtime-files.sha256" ]] || safe_fail runtime-file-manifest
+[[ -f "$campaign/runtime-symlinks.tsv" && ! -L "$campaign/runtime-symlinks.tsv" ]] || safe_fail runtime-symlink-manifest
+(cd "$campaign" && sha256sum --check runtime-files.sha256 >/dev/null) || safe_fail runtime-file-digest
+diff -u "$campaign/runtime-symlinks.tsv" \
+  <(cd "$campaign/runtime" && find . -type l -printf '%P\t%l\n' | LC_ALL=C sort) \
+  >/dev/null || safe_fail runtime-symlink-digest
+while IFS= read -r -d '' runtime_link; do
+  runtime_target=$(realpath -e -- "$runtime_link") || safe_fail runtime-symlink-target
+  case "$runtime_target" in "$campaign/runtime"/*) ;; *) safe_fail runtime-symlink-escape ;; esac
+done < <(find "$campaign/runtime" -type l -print0)
+linkage=$(LD_LIBRARY_PATH="$runtime_lib" ldd "$campaign/tools/WebKitWebDriver" 2>&1) \
+  || safe_fail webdriver-linkage
+grep -q 'not found' <<<"$linkage" && safe_fail webdriver-linkage
+unset linkage runtime_target
+/usr/sbin/runuser -u "$run_user" -- env -i \
+  HOME="$campaign" PATH=/usr/bin:/bin LD_LIBRARY_PATH="$runtime_lib" \
+  GST_PLUGIN_PATH="$gst_plugins" GST_PLUGIN_SYSTEM_PATH="$gst_plugins" \
+  GST_REGISTRY="$results/preflight-gstreamer-registry.bin" \
+  "$campaign/tools/WebKitWebDriver" --help >/dev/null 2>&1 || safe_fail webdriver-executable
 [[ $(cat /sys/class/drm/card1-DP-1/status) == connected ]] || safe_fail connector
 pgrep -f "/usr/lib/xorg/Xorg ${display}( |$)" >/dev/null && safe_fail display-busy
 
