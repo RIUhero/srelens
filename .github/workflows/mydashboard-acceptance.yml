@@ -143,7 +143,21 @@ jobs:
       - name: Install provider-free harness prerequisites
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends bubblewrap xauth
+          sudo apt-get install -y --no-install-recommends bubblewrap xauth webkit2gtk-driver
+      - name: Generate actual WebKit runtime closure
+        run: |
+          mkdir -p "$RUNNER_TEMP/phase-b-runtime-packages"
+          cd "$RUNNER_TEMP/phase-b-runtime-packages"
+          apt-get download \
+            gstreamer1.0-plugins-base libenchant-2-2 libgles2 \
+            libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 \
+            libharfbuzz-icu0 libhyphen0 libjavascriptcoregtk-4.1-0 \
+            libmanette-0.2-0 liborc-0.4-0t64 libsecret-1-0 \
+            libsoup-3.0-0 libwebkit2gtk-4.1-0 libwebpdemux2
+          cd "$GITHUB_WORKSPACE"
+          MYDASHBOARD_RUNTIME_PACKAGE_DIR="$RUNNER_TEMP/phase-b-runtime-packages" \
+          MYDASHBOARD_WEBKIT_DRIVER=/usr/bin/WebKitWebDriver \
+            scripts/mydashboard/test-phase-b-runtime-closure.sh
       - name: Execute root and mount-boundary regressions
         run: |
           scripts/mydashboard/test-phase-b-webdriver-readiness.sh

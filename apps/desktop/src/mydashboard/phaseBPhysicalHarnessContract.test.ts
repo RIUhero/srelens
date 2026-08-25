@@ -10,6 +10,9 @@ const harness = readFileSync(join(root, "scripts/mydashboard/phase-b-physical-ro
 const readiness = readFileSync(join(root, "scripts/mydashboard/wait-webdriver-ready.sh"), "utf8");
 const readinessContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-webdriver-readiness.sh"), "utf8");
 const xauthorityRootContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-xauthority-root.sh"), "utf8");
+const runtimeVerifier = readFileSync(join(root, "scripts/mydashboard/verify-phase-b-runtime-closure.sh"), "utf8");
+const runtimeBuilder = readFileSync(join(root, "scripts/mydashboard/build-phase-b-runtime-closure.sh"), "utf8");
+const runtimeContract = readFileSync(join(root, "scripts/mydashboard/test-phase-b-runtime-closure.sh"), "utf8");
 
 describe("Phase B physical Bubblewrap incident regression", () => {
   it("constructs mountpoints before sealing a minimal root", () => {
@@ -43,7 +46,26 @@ describe("Phase B physical Bubblewrap incident regression", () => {
     expect(harness).toContain("safe_fail runtime-file-digest");
     expect(harness).toContain("safe_fail runtime-symlink-digest");
     expect(harness).toContain("safe_fail runtime-symlink-escape");
+    expect(harness).toContain("tools/verify-phase-b-runtime-closure.sh");
+    expect(harness).toContain("safe_fail runtime-closure-integrity");
     expect(harness.indexOf("safe_fail webdriver-executable")).toBeLessThan(harness.indexOf("/usr/bin/openvt"));
+  });
+
+  it("builds a portable closure and rejects every dangling, escaping, absolute, or mutated link graph", () => {
+    expect(runtimeBuilder).toContain("documentation and packaging metadata are not executable WebKit inputs");
+    expect(runtimeBuilder).toContain('install -m 0700 "$plugin_source"');
+    for (const classification of [
+      "absolute-symlink",
+      "dangling-or-cyclic-symlink",
+      "escaping-symlink",
+      "documentation-tree-present",
+      "runtime-file-set",
+      "runtime-symlink-set",
+    ]) {
+      expect(runtimeVerifier).toContain(classification);
+      expect(runtimeContract).toContain(classification);
+    }
+    expect(runtimeContract).toContain("actual-webkit");
   });
 
   it("classifies bounded process, listener, empty-reply, and protocol readiness failures", () => {

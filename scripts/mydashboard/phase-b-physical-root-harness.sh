@@ -96,7 +96,7 @@ trap cleanup EXIT INT TERM
 [[ $EUID -eq 0 ]] || safe_fail root-required
 [[ -d "$campaign" && ! -L "$campaign" && -d "$results" && ! -L "$results" ]] || safe_fail campaign
 (cd "$campaign" && sha256sum --check manifest.sha256 >/dev/null) || safe_fail manifest
-for file in root-harness.sh runner.sh tools/run-phase-b-bwrap.sh tools/wait-webdriver-ready.sh; do
+for file in root-harness.sh runner.sh tools/run-phase-b-bwrap.sh tools/wait-webdriver-ready.sh tools/verify-phase-b-runtime-closure.sh; do
   target="$campaign/$file"
   [[ -f "$target" && ! -L "$target" && $(stat -c %h "$target") == 1 && $(stat -c %U "$target") == "$run_user" && $(stat -c %a "$target") == 700 ]] || safe_fail harness-metadata
 done
@@ -104,6 +104,9 @@ grep -Fq 'tools/wait-webdriver-ready.sh' "$campaign/runner.sh" || safe_fail runn
 [[ -d "$runtime_lib" && ! -L "$runtime_lib" && -d "$gst_plugins" && ! -L "$gst_plugins" ]] || safe_fail runtime-closure
 [[ -f "$campaign/runtime-files.sha256" && ! -L "$campaign/runtime-files.sha256" ]] || safe_fail runtime-file-manifest
 [[ -f "$campaign/runtime-symlinks.tsv" && ! -L "$campaign/runtime-symlinks.tsv" ]] || safe_fail runtime-symlink-manifest
+"$campaign/tools/verify-phase-b-runtime-closure.sh" \
+  "$campaign/runtime" "$campaign/runtime-files.sha256" "$campaign/runtime-symlinks.tsv" \
+  >/dev/null || safe_fail runtime-closure-integrity
 (cd "$campaign" && sha256sum --check runtime-files.sha256 >/dev/null) || safe_fail runtime-file-digest
 diff -u "$campaign/runtime-symlinks.tsv" \
   <(cd "$campaign/runtime" && find . -type l -printf '%P\t%l\n' | LC_ALL=C sort) \

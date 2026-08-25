@@ -159,3 +159,17 @@ no physical receipt. The replacement requires a manifest-pinned runtime
 closure, validates native linkage and executability before Xorg, and requires
 bounded process/listener/protocol readiness with explicit premature-exit,
 empty-reply, and timeout classifications.
+
+The first manifest-pinned closure still copied complete Debian package
+payloads. That admitted three cross-package documentation symlinks whose
+targets were not executable dependencies, plus one `gst-min` absolute symlink
+back to its temporary build directory. The root harness rejected the first
+dangling link before connector, Xorg, application, or Core startup.
+
+Runtime generation now excludes `/usr/share/doc`, `/usr/share/bug`, and
+`/usr/share/lintian`, and copies the required GStreamer plugin as a regular
+file. Absolute symlinks are prohibited. Every relative chain must resolve with
+`realpath -e` to a target inside the generated runtime. Exact regular-file and
+symlink manifests detect digest changes, additions, removals, and link-target
+changes after generation. CI builds this closure from actual Ubuntu WebKit
+packages and executes linkage and WebKitWebDriver checks against it.

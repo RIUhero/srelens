@@ -165,6 +165,17 @@ residue. The exact campaign, harness, and sudo command are withdrawn. Phase B
 remains unverified while the candidate-bound runtime closure and executable
 bounded-readiness correction proceed.
 
+Candidate `1d373db9902b0ecc432e81f6093ff78cb289d072` then failed closed in
+the pre-Xorg runtime traversal. Complete package extraction had admitted three
+dangling Debian documentation links, and `gst-min` contained one absolute link
+to the temporary extraction directory. No connector, Xorg, product, driver,
+WebKit, or Core process had started. The replacement generator excludes all
+documentation/packaging metadata, installs the GStreamer plugin as a regular
+file, rejects absolute links, resolves every relative chain inside the runtime,
+and binds exact regular-file and symlink sets to manifests. CI generates and
+traverses an actual WebKit package closure rather than relying only on synthetic
+fixtures. This campaign and its command are also withdrawn.
+
 Strict acceptance additionally requires an actual `ai-worker` physical-Xorg
 campaign for the exact current candidate: feature-OFF absence, feature-ON live
 Core rendering, fail-closed unavailable/malformed behavior, restart recovery,
