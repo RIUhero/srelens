@@ -13,5 +13,27 @@ export default defineConfig({
     strictPort: true,
     watch: { ignored: ["**/coverage/**", "**/dist/**", "**/src-tauri/**"] },
   },
-  build: { outDir: "dist", target: "es2021" },
+  build: {
+    outDir: "dist",
+    target: "es2021",
+    rollupOptions: {
+      output: {
+        // Keep stable framework libraries out of the application entry chunk.
+        // This is intentionally explicit: a catch-all node_modules split can
+        // create opaque circular chunks and make upstream dependency changes
+        // harder to review.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          if (id.includes("/react/") || id.includes("/react-dom/") || id.includes("/scheduler/")) {
+            return "vendor-react";
+          }
+          if (id.includes("/radix-ui/") || id.includes("/@radix-ui/")) return "vendor-radix";
+          if (id.includes("/mobx/") || id.includes("/mobx-react/")) return "vendor-mobx";
+          if (id.includes("/lucide-react/")) return "vendor-icons";
+          if (id.includes("/yaml/")) return "vendor-yaml";
+          return undefined;
+        },
+      },
+    },
+  },
 });

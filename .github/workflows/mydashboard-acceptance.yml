@@ -1,0 +1,168 @@
+name: MyDashboard acceptance gates
+
+on:
+  pull_request:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mydashboard-acceptance-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  PNPM_VERSION: 9.15.9
+  RUST_VERSION: 1.98.0
+
+jobs:
+  frontend-typecheck-test-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm rebuild esbuild
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+  rust-non-desktop-build-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: mydashboard-${{ hashFiles('Cargo.lock') }}
+      - run: cargo metadata --locked --no-deps
+      - run: cargo build --locked -p srelens-server
+      - run: cargo test --locked --workspace --exclude srelens-desktop
+
+  desktop-linux-build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Install official Tauri Linux prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          key: mydashboard-desktop-${{ hashFiles('Cargo.lock') }}
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm rebuild esbuild
+      - name: Locked compile and production package
+        env:
+          MYDASHBOARD_EXPECTED_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          MYDASHBOARD_RECEIPT_DIR: ${{ runner.temp }}/mydashboard-desktop-receipt
+          VITE_SRELENS_MYDASHBOARD: "1"
+        run: scripts/mydashboard/build-linux-desktop.sh
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mydashboard-desktop-${{ github.sha }}
+          path: ${{ runner.temp }}/mydashboard-desktop-receipt
+          if-no-files-found: error
+
+  cargo-audit:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@6c977a6ca4077a0ceb28ffbe03f59d46e9ac8772 # v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - uses: taiki-e/install-action@5b4d68e2e660441203ab128a23676f1e4faf1532 # v2
+        with:
+          tool: cargo-audit@0.22.2
+      - run: cargo audit --file Cargo.lock
+
+  projection-security-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.19.0
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm rebuild esbuild
+      - name: Projection, seam, and CSP security tests
+        run: >-
+          pnpm exec vitest run
+          apps/desktop/src/mydashboard/coreProjection.test.ts
+          apps/desktop/src/mydashboard/capabilityProjection.test.ts
+          apps/desktop/src/mydashboard/phaseBContract.test.ts
+          apps/desktop/src/mydashboard/MyDashboardView.test.tsx
+          apps/desktop/src/workstation/WorkstationModule.test.ts
+          apps/desktop/src/workstation/WorkstationShell.test.tsx
+          apps/desktop/src/mydashboard/desktopBuildContract.test.ts
+          apps/desktop/src/mydashboard/supplyChainContract.test.ts
+          apps/desktop/src/security-config.test.ts
+
+  xauthority-provider-free:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install provider-free harness prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends bubblewrap xauth webkit2gtk-driver
+      - name: Generate actual WebKit runtime closure
+        run: |
+          mkdir -p "$RUNNER_TEMP/phase-b-runtime-packages"
+          cd "$RUNNER_TEMP/phase-b-runtime-packages"
+          apt-get download \
+            gstreamer1.0-plugins-base libenchant-2-2 libgles2 \
+            libgstreamer-gl1.0-0 libgstreamer-plugins-base1.0-0 \
+            libharfbuzz-icu0 libhyphen0 libjavascriptcoregtk-4.1-0 \
+            libmanette-0.2-0 liborc-0.4-0t64 libsecret-1-0 \
+            libsoup-3.0-0 libwebkit2gtk-4.1-0 libwebpdemux2
+          cd "$GITHUB_WORKSPACE"
+          MYDASHBOARD_RUNTIME_PACKAGE_DIR="$RUNNER_TEMP/phase-b-runtime-packages" \
+          MYDASHBOARD_WEBKIT_DRIVER=/usr/bin/WebKitWebDriver \
+            scripts/mydashboard/test-phase-b-runtime-closure.sh
+      - name: Execute root and mount-boundary regressions
+        run: |
+          scripts/mydashboard/test-phase-b-webdriver-readiness.sh
+          sudo MYDASHBOARD_TEST_RUN_USER="$USER" \
+            scripts/mydashboard/test-phase-b-xauthority-root.sh
+          # Ubuntu 24 hosted runners restrict unprivileged user namespaces;
+          # root still exercises the same 18 mount and network boundaries.
+          sudo scripts/mydashboard/test-phase-b-bwrap-contract.sh

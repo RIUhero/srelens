@@ -20,7 +20,13 @@ import {
  *
  * Renders nothing outside a Tauri window (web mode has no vault commands).
  */
-export function VaultGate({ onReady }: { onReady?: () => void }) {
+export function VaultGate({
+  onReady,
+  topInsetPx = 0,
+}: {
+  onReady?: () => void;
+  topInsetPx?: number;
+}) {
   const [status, setStatus] = useState<VaultStatus | null>(null);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -80,9 +86,18 @@ export function VaultGate({ onReady }: { onReady?: () => void }) {
     });
   }, []);
 
+  // A feature-enabled WorkstationShell may reserve its navigation strip above
+  // this gate. The SRELens base view remains fully blocked below that strip;
+  // the inset only lets a capability-free read-only module be selected without
+  // creating or reading a vault credential.
+  const overlayStyle = topInsetPx > 0 ? { top: topInsetPx } : undefined;
+
   if (statusFailed) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+        style={overlayStyle}
+      >
         <div className="flex w-96 flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-lg">
           <div className="flex items-center gap-2">
             <Lock className="size-5 text-muted-foreground" aria-hidden="true" />
@@ -118,7 +133,10 @@ export function VaultGate({ onReady }: { onReady?: () => void }) {
   const setup = status.mode === "setup-required";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background"
+      style={overlayStyle}
+    >
       <form
         className="flex w-96 flex-col gap-4 rounded-xl border border-border bg-card p-6 shadow-lg"
         onSubmit={(e) => {

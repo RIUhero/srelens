@@ -89,7 +89,7 @@ import type { ViewTab } from "@srelens/core";
 const CLOSE_WRITE_TIMEOUT_MS = 2000;
 
 
-export function App() {
+export function App({ vaultGateTopInsetPx = 0 }: { vaultGateTopInsetPx?: number } = {}) {
   // Each tab is a (cluster, resource-kind) view, like browser tabs. In web mode
   // the open tabs are restored from a prior session (a browser reload otherwise
   // wipes them); desktop starts empty. Computed once so tabs/activeTabId/the id
@@ -1202,7 +1202,10 @@ export function App() {
       <ShortcutCheatSheet open={cheatSheetOpen} onOpenChange={setCheatSheetOpen} desktop={!isWeb} />
       <Toaster position="top-right" richColors closeButton />
       <McpConfirmDialog />
-      <VaultGate onReady={() => setVaultReady(true)} />
+      <VaultGate
+        onReady={() => setVaultReady(true)}
+        topInsetPx={vaultGateTopInsetPx}
+      />
     </div>
   );
 }
